@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+### NextJS Rust WASM
 
-## Getting Started
+[Resource](https://www.tkat0.dev/posts/how-to-create-a-react-app-with-rust-and-wasm/)
 
-First, run the development server:
+1.  Create a react/nextjs app
+2.  create a rust lib with cargo in the web app folder
+    ```$ cargo new wasm-lib --lib
+    Created library `wasm-lib`package`
+    ```
+3.  Add the wasm-bidgen dependency in rust
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+    ```
+    [package]
+    name = "wasm-lib"
+    version = "0.1.0"
+    edition = "2021"
+     +[lib]
+     +crate-type = ["cdylib"]
+    [dependencies]
+    +wasm-bindgen = "0.2.78"
+    ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4.  add wasm-bindgen to your function
+    ```
+    +use wasm_bindgen::prelude::\*;
+    +#[wasm_bindgen]
+    pub fn add(a: i32, b: i32) -> i32 {
+    a + b
+    } #[test]
+    fn add_test() {
+    assert_eq!(1 + 1, add(1, 1));
+    }
+    ```
+5.  on the react root project folder run the following: `cargo install wasm-pack`
+6.  add the following to package.json
+    ```
+    "build:wasm": "cd wasm-lib && wasm-pack build --target web --out-dir pkg",
+    ```
+7.  `npm run build:wasm`
+8.  `npm install ./wasm-lib/pkg`
+9.  Call the wasm function into the app
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+    ```
+    import and call
+    import React, { useEffect, useState } from 'react';
+    +import init, { add } from "wasm-lib";
+    import logo from './logo.svg';
+    import './App.css';
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+    function App() {
 
-## Learn More
+    - const [ans, setAns] = useState(0);
+    - useEffect(() => {
+    - init().then(() => {
+    -      setAns(add(1, 1));
+    - })
+    - }, [])
+    return (
+    <div className="App">
+        <header className="App-header">
+        <img src={logo} className="App-logo" alt="logo" />
+        <p>
+            Edit <code>src/App.tsx</code> and save to reload.
+        </p>
+    -        <p>1 + 1 = {ans}</p>
+            <a
+                className="App-link"
+                href="https://reactjs.org"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                Learn React
+            </a>
+            </header>
+        </div>
 
-To learn more about Next.js, take a look at the following resources:
+    );
+    }
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+      export default App;
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+    ```
